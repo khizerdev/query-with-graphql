@@ -1,6 +1,5 @@
 query AllBooks($search: String) {
   allBooks(search: $search) {
-    test # wrong property, doesn't exist in our GraphQL schema
     id
     title
     rating
