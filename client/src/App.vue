@@ -1,30 +1,54 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
   <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+    <p v-for="book in result.allBooks" :key="book.id">
+      {{ book.title }}
+    </p>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script>
+import { useQuery } from "@vue/apollo-composable";
+import gql from "graphql-tag";
+
+const ALL_BOOKS_QUERY = gql`
+  query AllBooks {
+    allBooks {
+      id
+      title
+      rating
+    }
+  }
+`;
+
+export default {
+  name: "App",
+  setup() {
+    const { result } = useQuery(ALL_BOOKS_QUERY);
+
+    console.log(result);
+
+    return { result };
+  },
+};
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.list-wrapper {
+  display: flex;
+  margin: 0 auto;
+  max-width: 960px;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.list {
+  width: 50%;
 }
 </style>
