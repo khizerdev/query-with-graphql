@@ -24,7 +24,6 @@
       </p>
       <template v-else>
         <p v-for="book in books" :key="book.id">
-          <!-- Display rating to see what we're editing -->
           {{ book.title }} - {{ book.rating }}
           <button @click="activeBook = book">Edit rating</button>
         </p>
@@ -34,34 +33,49 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
-import { useQuery } from "@vue/apollo-composable";
+import { ref } from "vue";
+import { useQuery, useResult } from "@vue/apollo-composable";
+import ALL_BOOKS_QUERY from "./graphql/allBooks.query.gql";
+import BOOK_SUBSCRIPTION from "./graphql/newBook.subscription.gql";
 import EditRating from "./components/EditRating.vue";
 import AddBook from "./components/AddBook.vue";
-import ALL_BOOKS_QUERY from "./graphql/allBooks.query.gql";
 
 export default {
   name: "App",
   components: {
-    EditRating, //add EditRating to components
+    EditRating,
     AddBook,
   },
   setup() {
     const searchTerm = ref("");
     const activeBook = ref(null);
     const showNewBookForm = ref(false);
-    const { result, loading, error } = useQuery(
+
+    const { result, loading, error, subscribeToMore } = useQuery(
       ALL_BOOKS_QUERY,
       () => ({
         search: searchTerm.value,
       }),
-      // query options
       () => ({
         debounce: 500,
+        // enabled: searchTerm.value.length > 2
       })
     );
 
-    const books = computed(() => result.value?.allBooks ?? []);
+    subscribeToMore(() => ({
+      document: BOOK_SUBSCRIPTION,
+      updateQuery(previousResult, newResult) {
+        const res = {
+          allBooks: [
+            ...previousResult.allBooks,
+            newResult.subscriptionData.data.bookSub,
+          ],
+        };
+        return res;
+      },
+    }));
+
+    const books = useResult(result, [], (data) => data.allBooks);
 
     return { books, searchTerm, loading, error, activeBook, showNewBookForm };
   },
